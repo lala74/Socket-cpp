@@ -5,6 +5,7 @@ Class socket in C++
 ## Compile
 
 ```bash
+cd Socket/
 make all
 ```
 
