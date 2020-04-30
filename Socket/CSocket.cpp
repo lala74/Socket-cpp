@@ -59,6 +59,10 @@ string CSocket::getAddr()
 CServer::CServer(int port)
 {
     int iRet;
+    char hostname[256];
+    iRet = gethostname(hostname, sizeof(hostname));
+    cout << "hostname: " << hostname << endl;
+
     bzero((char *)&m_socketAddr, sizeof(m_socketAddr));
     /* setup the host_addr structure for use in bind call */
     m_socketAddr.sin_family = AF_INET;              // server byte order
