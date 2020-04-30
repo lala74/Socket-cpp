@@ -17,11 +17,6 @@
 
 using namespace std;
 
-struct thread_data {
-   int thread_id;
-   int socketFD;
-};
-
 string getInput()
 {
     string msg;
@@ -58,26 +53,22 @@ string getMsg(int socketFD)
     return msg;
 }
 
-void *getMsgFromServer(void *threadArg)
+void getMsgFromServer(int socketFD)
 {
     string msg;
-    struct thread_data *data;
-    data = (struct thread_data *) threadArg;
     while(1) {
-        msg = getMsg(data->socketFD);
+        msg = getMsg(socketFD);
         cout << "Server: " << msg << endl;
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
-void *sendMsgToServer(void *threadArg)
+void sendMsgToServer(int socketFD)
 {
     string msg;
-    struct thread_data *data;
-    data = (struct thread_data *) threadArg;
     while(1) {
         msg = getInput();
-        sendMsg(data->socketFD, msg);
+        sendMsg(socketFD, msg);
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
@@ -103,8 +94,6 @@ in_addr_t getAddr(char *host)
 int main(int argc, char *argv[])
 {
     in_addr_t serverAddr;
-    pthread_t thread_getMsg, thread_sendMsg;
-    struct thread_data data_getMsg, data_sendMsg;
     int portNumber = 0;
     int iRet = 0;
 
@@ -113,6 +102,7 @@ int main(int argc, char *argv[])
         exit(0);
     }
     portNumber = atoi(argv[2]);
+
     try {
         serverAddr = getAddr(argv[1]);
         if (serverAddr == 0) {
@@ -120,27 +110,19 @@ int main(int argc, char *argv[])
             throw -1;
         }
         CClient client;
-        client.connectAddr(serverAddr, portNumber);
+        iRet = client.connectAddr(serverAddr, portNumber);
+        if (iRet < 0) {
+            cerr << "Error while connecting" << endl;
+            throw -1;
+        }
         
         /* Thread to read + write msg */
-        data_getMsg.thread_id = 1;
-        data_getMsg.socketFD  = client.getSocketFD();
-        iRet = pthread_create(&thread_getMsg, NULL, getMsgFromServer, (void *)&data_getMsg);
-        if (iRet < 0) {
-            cerr << "Error creating thread" << endl;
-            throw -1;
-        }
+        thread read_socket  (getMsgFromServer, client.getSocketFD());
+        thread write_socket (sendMsgToServer, client.getSocketFD());
 
-        data_sendMsg.thread_id = 2;
-        data_sendMsg.socketFD = client.getSocketFD();
-        iRet = pthread_create(&thread_sendMsg, NULL, sendMsgToServer, (void *)&data_sendMsg);
-        if (iRet < 0) {
-            cerr << "Error creating thread" << endl;
-            throw -1;
-        }
-        while (1) {
+        read_socket.join();
+        write_socket.join();
 
-        }
     } catch (int e) {
         cout << "Error code " << e << endl;
     }

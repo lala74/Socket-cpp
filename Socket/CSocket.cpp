@@ -132,7 +132,7 @@ CClient::CClient()
     }
 }
 
-void CClient::connectAddr(in_addr_t addr, int port)
+int CClient::connectAddr(in_addr_t addr, int port)
 {
     int iRet = 0;
     sockaddr_in serverAddr;
@@ -144,6 +144,7 @@ void CClient::connectAddr(in_addr_t addr, int port)
     iRet = connect(m_socketFD, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     if (iRet < 0) {
         cerr << "ERROR connecting" << endl;
-        throw -iRet;
+        return iRet;
     }
+    return 0;
 }
