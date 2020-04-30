@@ -6,7 +6,7 @@
 #include <string>
 
 in_addr_t getAddr(char *host);
-void read_event(std::string name, int socketFD);
-void write_event(int socketFD);
+void read_event(std::string name,  int socketFD);
+void write_event(std::string name, int socketFD);
 
 #endif

@@ -9,29 +9,39 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <termios.h>
 
 #include "utils.h"
 
 using namespace std;
 
-static string getInput()
+static char getch(void)
 {
-    string msg;
-    cin >> msg;
-    return msg;
+    char buf = 0;
+    struct termios old = {0};
+    fflush(stdout);
+    if(tcgetattr(0, &old) < 0)
+        perror("tcsetattr()");
+    old.c_lflag &= ~ICANON;
+    old.c_lflag &= ~ECHO;
+    old.c_cc[VMIN] = 1;
+    old.c_cc[VTIME] = 0;
+    if(tcsetattr(0, TCSANOW, &old) < 0)
+        perror("tcsetattr ICANON");
+    if(read(0, &buf, 1) < 0)
+        perror("read()");
+    old.c_lflag |= ICANON;
+    old.c_lflag |= ECHO;
+    if(tcsetattr(0, TCSADRAIN, &old) < 0)
+        perror("tcsetattr ~ICANON");
+    return buf;
 }
 
-static void sendMsg(int socketFD, string msg)
+static char check_press_key()
 {
-    int n = 0;
-    char bufferWrite[256];
-    bzero(bufferWrite, 256);
-    strcpy(bufferWrite, msg.c_str());
-    n = write(socketFD, bufferWrite, strlen(bufferWrite));
-    if (n < 0) {
-        cerr << "ERROR writing to socket" << endl;
-        throw -1;
-    }
+    char chk;
+    chk=getch();
+    return chk;
 }
 
 in_addr_t getAddr(char *host)
@@ -54,7 +64,7 @@ in_addr_t getAddr(char *host)
 
 void read_event(string name, int socketFD)
 {
-    int iRet;
+    int iRet = 0;
     char msg[256];
     while(1) {
         bzero(msg, 256);
@@ -70,12 +80,22 @@ void read_event(string name, int socketFD)
     }
 }
 
-void write_event(int socketFD)
+void write_event(string name, int socketFD)
 {
-    string msg;
+    int iRet = 0;
+    char msg[1024];
+    char strchar[1024];
     while(1) {
-        msg = getInput();
-        sendMsg(socketFD, msg);
+        strchar[0] = check_press_key();
+        cout << name << ": " << strchar[0];
+        cin >> msg;
+        strcat(strchar,msg);
+        send(socketFD , strchar, strlen(strchar) , 0);
+        if (iRet < 0) {
+            cerr << "ERROR reading from socket" << endl;
+            throw -1;
+        }
+        memset(strchar,0,strlen(strchar));
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }

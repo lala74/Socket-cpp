@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
         cout << "server: got connection from "<< socketClient->getAddr() <<" port " << socketClient->getPort() << endl;
 
         /* Thread to read + write msg */
-        thread read_socket  (read_event, "client", socketClient->getSocketFD());
-        thread write_socket (write_event, socketClient->getSocketFD());
+        thread read_socket  (read_event,  "client", socketClient->getSocketFD());
+        thread write_socket (write_event, "server", socketClient->getSocketFD());
 
         read_socket.join();
         write_socket.join();
