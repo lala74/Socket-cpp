@@ -20,11 +20,6 @@
 
 using namespace std;
 
-struct thread_data {
-   int thread_id;
-   int socketFD;
-};
-
 string getInput()
 {
     string msg;
@@ -61,70 +56,49 @@ string getMsg(int socketFD)
     return msg;
 }
 
-void *getMsgFromClient(void *threadArg)
+void getMsgFromClient(int socketFD)
 {
     string msg;
-    struct thread_data *data;
-    data = (struct thread_data *) threadArg;
     while(1) {
-        msg = getMsg(data->socketFD);
+        msg = getMsg(socketFD);
         cout << "Client: " << msg << endl;
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
-void *sendMsgToClient(void *threadArg)
+void sendMsgToClient(int socketFD)
 {
     string msg;
-    struct thread_data *data;
-    data = (struct thread_data *) threadArg;
     while(1) {
         msg = getInput();
-        sendMsg(data->socketFD, msg);
+        sendMsg(socketFD, msg);
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
 int main(int argc, char *argv[])
 {
-    pthread_t thread_getMsg, thread_sendMsg;
-    struct thread_data data_getMsg, data_sendMsg;
     int portNumber = 0;
-    int iRet = 0;
     
     if (argc < 2) {
         cerr << "ERROR, no port provided\n" << endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
+    portNumber = atoi(argv[1]);
+
     try {
-        portNumber = atoi(argv[1]);
         CServer server(portNumber);
         CSocket *socketClient = nullptr;
         socketClient = server.acceptConnection();
         cout << "server: got connection from "<< socketClient->getAddr() <<" port " << socketClient->getPort() << endl;
 
         /* Thread to read + write msg */
-        data_getMsg.thread_id = 1;
-        data_getMsg.socketFD  = socketClient->getSocketFD();
-        iRet = pthread_create(&thread_getMsg, NULL, getMsgFromClient, (void *)&data_getMsg);
-        if (iRet < 0) {
-            cerr << "Error creating thread" << endl;
-            throw -1;
-        }
+        thread read_socket  (getMsgFromClient, socketClient->getSocketFD());
+        thread write_socket (sendMsgToClient, socketClient->getSocketFD());
 
-        data_sendMsg.thread_id = 2;
-        data_sendMsg.socketFD = socketClient->getSocketFD();
-        iRet = pthread_create(&thread_sendMsg, NULL, sendMsgToClient, (void *)&data_sendMsg);
-        if (iRet < 0) {
-            cerr << "Error creating thread" << endl;
-            throw -1;
-        }
-        while (1) {
+        read_socket.join();
+        write_socket.join();
 
-        }
-
-        close(socketClient->getSocketFD());
-        close(server.getSocketFD());
     } catch (int e) {
         cout << "Error code " << e << endl;
     }

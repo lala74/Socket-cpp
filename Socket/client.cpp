@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (argc < 3) {
         cerr << "usage hostname port " << endl;
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     portNumber = atoi(argv[2]);
 
