@@ -11,6 +11,7 @@ LDLIBS = -pthread
 
 
 BASE_OBJECTS 	=			CSocket.o \
+							utils.o
 
 TARGET_SERVER 	=			server
 TARGET_CLIENT 	=			client

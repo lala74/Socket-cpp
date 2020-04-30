@@ -9,87 +9,12 @@
 #include <arpa/inet.h>
 
 #include <iostream>
-#include <pthread.h>
-#include <chrono>
 #include <thread>
 
 #include "CSocket.h"
+#include "utils.h"
 
 using namespace std;
-
-string getInput()
-{
-    string msg;
-    cout << "Client: ";
-    cin >> msg;
-    return msg;
-}
-
-void sendMsg(int socketFD, string msg)
-{
-    int n = 0;
-    char bufferWrite[256];
-    bzero(bufferWrite, 256);
-    strcpy(bufferWrite, msg.c_str());
-    n = write(socketFD, bufferWrite, strlen(bufferWrite));
-    if (n < 0) {
-        cerr << "ERROR writing to socket" << endl;
-        throw -1;
-    }
-}
-
-string getMsg(int socketFD)
-{
-    int n = 0;
-    char buffer[256];
-    string msg;
-    bzero(buffer, 256);
-    n = read(socketFD, buffer, 255);
-    if (n < 0) {
-        cerr << "ERROR reading from socket" << endl;
-        throw -1;
-    }
-    msg += buffer;
-    return msg;
-}
-
-void getMsgFromServer(int socketFD)
-{
-    string msg;
-    while(1) {
-        msg = getMsg(socketFD);
-        cout << "Server: " << msg << endl;
-        this_thread::sleep_for(chrono::milliseconds(10));
-    }
-}
-
-void sendMsgToServer(int socketFD)
-{
-    string msg;
-    while(1) {
-        msg = getInput();
-        sendMsg(socketFD, msg);
-        this_thread::sleep_for(chrono::milliseconds(10));
-    }
-}
-
-in_addr_t getAddr(char *host)
-{
-    in_addr_t addr;
-    struct hostent *server = nullptr;
-    // Convert address IP to in_addr_t
-    if(inet_pton(AF_INET, host, &addr) <= 0) { 
-        server = gethostbyname(host);
-        if (server == NULL) {
-            return 0;
-        } else {
-            bcopy(  server->h_addr_list[0],
-                    (char *)&addr,
-                    server->h_length);   
-        }
-    }
-    return addr;
-}
 
 int main(int argc, char *argv[])
 {
@@ -117,8 +42,8 @@ int main(int argc, char *argv[])
         }
         
         /* Thread to read + write msg */
-        thread read_socket  (getMsgFromServer, client.getSocketFD());
-        thread write_socket (sendMsgToServer, client.getSocketFD());
+        thread read_socket  (read_event, "server", client.getSocketFD());
+        thread write_socket (write_event, client.getSocketFD());
 
         read_socket.join();
         write_socket.join();

@@ -17,64 +17,9 @@
 #include <iostream>
 
 #include "CSocket.h"
+#include "utils.h"
 
 using namespace std;
-
-string getInput()
-{
-    string msg;
-    cout << "Server: ";
-    cin >> msg;
-    return msg;
-}
-
-void sendMsg(int socketFD, string msg)
-{
-    int n = 0;
-    char bufferWrite[256];
-    bzero(bufferWrite, 256);
-    strcpy(bufferWrite, msg.c_str());
-    n = write(socketFD, bufferWrite, strlen(bufferWrite));
-    if (n < 0) {
-        cerr << "ERROR writing to socket" << endl;
-        throw -1;
-    }
-}
-
-string getMsg(int socketFD)
-{
-    int n = 0;
-    char buffer[256];
-    string msg;
-    bzero(buffer, 256);
-    n = read(socketFD, buffer, 255);
-    if (n < 0) {
-        cerr << "ERROR reading from socket" << endl;
-        throw -1;
-    }
-    msg += buffer;
-    return msg;
-}
-
-void getMsgFromClient(int socketFD)
-{
-    string msg;
-    while(1) {
-        msg = getMsg(socketFD);
-        cout << "Client: " << msg << endl;
-        this_thread::sleep_for(chrono::milliseconds(10));
-    }
-}
-
-void sendMsgToClient(int socketFD)
-{
-    string msg;
-    while(1) {
-        msg = getInput();
-        sendMsg(socketFD, msg);
-        this_thread::sleep_for(chrono::milliseconds(10));
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -93,8 +38,8 @@ int main(int argc, char *argv[])
         cout << "server: got connection from "<< socketClient->getAddr() <<" port " << socketClient->getPort() << endl;
 
         /* Thread to read + write msg */
-        thread read_socket  (getMsgFromClient, socketClient->getSocketFD());
-        thread write_socket (sendMsgToClient, socketClient->getSocketFD());
+        thread read_socket  (read_event, "client", socketClient->getSocketFD());
+        thread write_socket (write_event, socketClient->getSocketFD());
 
         read_socket.join();
         write_socket.join();
