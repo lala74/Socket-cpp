@@ -142,6 +142,11 @@ void CClient::connectAddr(char *addr, int addrLen, int port)
     bcopy(  addr,
             (char *)&serverAddr.sin_addr.s_addr,
             addrLen);
+    if(inet_pton(AF_INET, "10.188.161.147", &serverAddr.sin_addr)<=0)  
+    { 
+        printf("\nInvalid address/ Address not supported \n"); 
+        throw -1; 
+    } 
     cout << "Connection to " << inet_ntoa(serverAddr.sin_addr) << " port " << port << endl;
     iRet = connect(m_socketFD, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     if (iRet < 0) {
