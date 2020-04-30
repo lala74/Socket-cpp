@@ -87,14 +87,11 @@ void *sendMsgToClient(void *threadArg)
 
 int main(int argc, char *argv[])
 {
-    // socklen_t clientAddrLen;
     pthread_t thread_getMsg, thread_sendMsg;
     struct thread_data data_getMsg, data_sendMsg;
     int portNumber = 0;
     int iRet = 0;
     
-    // CServer *server = nullptr;
-
     if (argc < 2) {
         cerr << "ERROR, no port provided\n" << endl;
         exit(1);

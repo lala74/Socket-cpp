@@ -34,7 +34,7 @@ class CClient: public CSocket
 {
     public:
         CClient();
-        void connectAddr(char *addr, int addrLen, int port);
+        void connectAddr(in_addr_t addr, int port);
 };
 
 #endif

@@ -82,9 +82,27 @@ void *sendMsgToServer(void *threadArg)
     }
 }
 
+in_addr_t getAddr(char *host)
+{
+    in_addr_t addr;
+    struct hostent *server = nullptr;
+    // Convert address IP to in_addr_t
+    if(inet_pton(AF_INET, host, &addr) <= 0) { 
+        server = gethostbyname(host);
+        if (server == NULL) {
+            return 0;
+        } else {
+            bcopy(  server->h_addr_list[0],
+                    (char *)&addr,
+                    server->h_length);   
+        }
+    }
+    return addr;
+}
+
 int main(int argc, char *argv[])
 {
-    struct hostent *server;
+    in_addr_t serverAddr;
     pthread_t thread_getMsg, thread_sendMsg;
     struct thread_data data_getMsg, data_sendMsg;
     int portNumber = 0;
@@ -96,14 +114,13 @@ int main(int argc, char *argv[])
     }
     portNumber = atoi(argv[2]);
     try {
-        server = gethostbyname(argv[1]);
-        if (server == NULL) {
-            cout << "ERROR, no such host" << endl;
-            throw 0;
+        serverAddr = getAddr(argv[1]);
+        if (serverAddr == 0) {
+            cerr << "Error no such host" << endl;
+            throw -1;
         }
-        
         CClient client;
-        client.connectAddr(server->h_addr_list[0], server->h_length, portNumber);
+        client.connectAddr(serverAddr, portNumber);
         
         /* Thread to read + write msg */
         data_getMsg.thread_id = 1;
