@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
         }
         
         /* Thread to read + write msg */
-        thread read_socket  (read_event,  "server", client.getSocketFD());
-        thread write_socket (write_event, "client", client.getSocketFD());
+        thread read_socket  (read_event,  "server", client.getSocketFD(), -1);
+        thread write_socket (write_event, "client", client.getSocketFD(), -1);
 
         read_socket.join();
         write_socket.join();

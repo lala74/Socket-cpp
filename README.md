@@ -19,7 +19,9 @@ make all
 # Start chatting
 ```
 
-Example
+Type `exit` to stop chatting
+
+### Example
 
 ```bash
 ./server 8080
@@ -28,4 +30,4 @@ Example
 
 We use `localhost` or `127.0.0.1` to chat between 2 terminals in the same laptop.
 
-If we want to chat between 2 laptop, 2 laptop have to connect to the same wifi network and replace `<hostname> = computer_name | IP`
+If we want to chat between 2 laptops, 2 laptops have to connect to the same wifi network and replace `<hostname> = computer_name | IP`

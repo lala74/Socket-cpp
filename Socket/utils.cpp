@@ -15,6 +15,13 @@
 
 using namespace std;
 
+static void close_socket(int socketFD)
+{
+    if (socketFD < 0) {
+        close(socketFD);
+    }
+}
+
 static char getch(void)
 {
     char buf = 0;
@@ -37,13 +44,6 @@ static char getch(void)
     return buf;
 }
 
-static char check_press_key()
-{
-    char chk;
-    chk=getch();
-    return chk;
-}
-
 in_addr_t getAddr(char *host)
 {
     in_addr_t addr;
@@ -62,7 +62,7 @@ in_addr_t getAddr(char *host)
     return addr;
 }
 
-void read_event(string name, int socketFD)
+void read_event(string name, int socketFD, int serverSocketFD)
 {
     int iRet = 0;
     char msg[256];
@@ -76,24 +76,36 @@ void read_event(string name, int socketFD)
         if (msg[0] != '\0') {
             cout << name << ": " << msg << endl;
         }
+        if (strcmp(msg, "exit") == 0) {
+            cout << "\nDisconnected" << endl;
+            close_socket(socketFD);
+            close_socket(serverSocketFD);
+            exit(EXIT_SUCCESS);
+        }
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
-void write_event(string name, int socketFD)
+void write_event(string name, int socketFD, int serverSocketFD)
 {
     int iRet = 0;
     char msg[1024];
     char strchar[1024];
     while(1) {
-        strchar[0] = check_press_key();
+        strchar[0] = getch();
         cout << name << ": " << strchar[0];
         cin >> msg;
         strcat(strchar,msg);
         send(socketFD , strchar, strlen(strchar) , 0);
         if (iRet < 0) {
-            cerr << "ERROR reading from socket" << endl;
+            cerr << "ERROR sending to socket" << endl;
             throw -1;
+        }
+        if (strcmp(strchar, "exit") == 0) {
+            cout << "\nDisconnected" << endl;
+            close_socket(socketFD);
+            close_socket(serverSocketFD);
+            exit(EXIT_SUCCESS);
         }
         memset(strchar,0,strlen(strchar));
         this_thread::sleep_for(chrono::milliseconds(10));
