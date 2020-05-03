@@ -94,7 +94,7 @@ void write_event(string name, int socketFD, int serverSocketFD)
     while(1) {
         strchar[0] = getch();
         cout << name << ": " << strchar[0];
-        cin >> msg;
+        cin.getline(msg, sizeof(msg));
         strcat(strchar,msg);
         send(socketFD , strchar, strlen(strchar) , 0);
         if (iRet < 0) {
