@@ -89,25 +89,24 @@ void read_event(string name, int socketFD, int serverSocketFD)
 void write_event(string name, int socketFD, int serverSocketFD)
 {
     int iRet = 0;
-    char msg[1024];
-    char strchar[1024];
+    char firstWord;
+    string msg;
     while(1) {
-        strchar[0] = getch();
-        cout << name << ": " << strchar[0];
-        cin.getline(msg, sizeof(msg));
-        strcat(strchar,msg);
-        send(socketFD , strchar, strlen(strchar) , 0);
+        firstWord = getch();
+        cout << name << ": " << firstWord;
+        getline(cin, msg);
+        msg = firstWord + msg;
+        send(socketFD , msg.c_str(), msg.length() , 0);
         if (iRet < 0) {
             cerr << "ERROR sending to socket" << endl;
             throw -1;
         }
-        if (strcmp(strchar, "exit") == 0) {
+        if (msg == "exit") {
             cout << "\nDisconnected" << endl;
             close_socket(socketFD);
             close_socket(serverSocketFD);
             exit(EXIT_SUCCESS);
         }
-        memset(strchar,0,strlen(strchar));
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
