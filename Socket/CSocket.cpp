@@ -13,6 +13,7 @@
 #include <thread>
 #include <iostream>
 #include <string>
+#include <netdb.h>
 
 #include "CSocket.h"
 
@@ -60,8 +61,18 @@ CServer::CServer(int port)
 {
     int iRet;
     char hostname[256];
+    struct hostent *server = nullptr;
+
     iRet = gethostname(hostname, sizeof(hostname));
-    cout << "hostname: " << hostname << endl;
+    if (iRet < 0) {
+        throw -1;
+    }
+    cout << "hostname:    " << hostname << endl;
+    server = gethostbyname(hostname);
+    if (server == NULL) {
+        throw -1;
+    }
+    cout << "address IP:  " << inet_ntoa(*((struct in_addr*)server->h_addr_list[0])) << endl;
 
     bzero((char *)&m_socketAddr, sizeof(m_socketAddr));
     /* setup the host_addr structure for use in bind call */
