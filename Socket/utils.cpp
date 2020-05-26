@@ -1,15 +1,15 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <termios.h>
+#include <unistd.h>
+#include <chrono>
 #include <iostream>
 #include <string>
-#include <chrono>
 #include <thread>
-#include <termios.h>
 
 #include "utils.h"
 
@@ -17,7 +17,7 @@ using namespace std;
 
 static void close_socket(int socketFD)
 {
-    if (socketFD < 0) {
+    if(socketFD < 0) {
         close(socketFD);
     }
 }
@@ -27,36 +27,30 @@ static char getch(void)
     char buf = 0;
     struct termios old = {0};
     fflush(stdout);
-    if(tcgetattr(0, &old) < 0)
-        perror("tcsetattr()");
+    if(tcgetattr(0, &old) < 0) perror("tcsetattr()");
     old.c_lflag &= ~ICANON;
     old.c_lflag &= ~ECHO;
     old.c_cc[VMIN] = 1;
     old.c_cc[VTIME] = 0;
-    if(tcsetattr(0, TCSANOW, &old) < 0)
-        perror("tcsetattr ICANON");
-    if(read(0, &buf, 1) < 0)
-        perror("read()");
+    if(tcsetattr(0, TCSANOW, &old) < 0) perror("tcsetattr ICANON");
+    if(read(0, &buf, 1) < 0) perror("read()");
     old.c_lflag |= ICANON;
     old.c_lflag |= ECHO;
-    if(tcsetattr(0, TCSADRAIN, &old) < 0)
-        perror("tcsetattr ~ICANON");
+    if(tcsetattr(0, TCSADRAIN, &old) < 0) perror("tcsetattr ~ICANON");
     return buf;
 }
 
-in_addr_t getAddr(char *host)
+in_addr_t getAddr(char* host)
 {
     in_addr_t addr;
-    struct hostent *server = nullptr;
+    struct hostent* server = nullptr;
     // Convert address IP to in_addr_t
-    if(inet_pton(AF_INET, host, &addr) <= 0) { 
+    if(inet_pton(AF_INET, host, &addr) <= 0) {
         server = gethostbyname(host);
-        if (server == NULL) {
+        if(server == NULL) {
             return 0;
         } else {
-            bcopy(  server->h_addr_list[0],
-                    (char *)&addr,
-                    server->h_length);   
+            bcopy(server->h_addr_list[0], (char*)&addr, server->h_length);
         }
     }
     return addr;
@@ -69,14 +63,14 @@ void read_event(string name, int socketFD, int serverSocketFD)
     while(1) {
         bzero(msg, 256);
         iRet = read(socketFD, msg, 255);
-        if (iRet < 0) {
+        if(iRet < 0) {
             cerr << "ERROR reading from socket" << endl;
-            throw -1;
+            throw - 1;
         }
-        if (msg[0] != '\0') {
+        if(msg[0] != '\0') {
             cout << name << ": " << msg << endl;
         }
-        if (strcmp(msg, "exit") == 0) {
+        if(strcmp(msg, "exit") == 0) {
             cout << "\nDisconnected" << endl;
             close_socket(socketFD);
             close_socket(serverSocketFD);
@@ -96,12 +90,12 @@ void write_event(string name, int socketFD, int serverSocketFD)
         cout << name << ": " << firstWord;
         getline(cin, msg);
         msg = firstWord + msg;
-        send(socketFD , msg.c_str(), msg.length() , 0);
-        if (iRet < 0) {
+        send(socketFD, msg.c_str(), msg.length(), 0);
+        if(iRet < 0) {
             cerr << "ERROR sending to socket" << endl;
-            throw -1;
+            throw - 1;
         }
-        if (msg == "exit") {
+        if(msg == "exit") {
             cout << "\nDisconnected" << endl;
             close_socket(socketFD);
             close_socket(serverSocketFD);
