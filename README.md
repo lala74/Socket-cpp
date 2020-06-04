@@ -4,12 +4,37 @@ Class socket in C++
 
 ## Compile
 
+### With Makefile
+
 ```bash
 cd Socket/
 make all
 ```
 
+### With CMake
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
 ## Execute
+
+### Target compiled by Makefile
+
+```bash
+cd Project
+```
+
+### Target compiled by CMake
+
+```bash
+cd Project/build/bin
+```
+
+### Execute target
 
 ```bash
 # In terminal 1
