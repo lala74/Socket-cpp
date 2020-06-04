@@ -4,15 +4,9 @@ project(Socket-cpp)
 
 add_compile_options(${CMAKE_CXX_FLAGS} -Wall)
 
-# Add policy
-if(COMMAND cmake_policy)
-    cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
-
 # Settings
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/bin)
 
 # Constant name
@@ -27,15 +21,18 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
 )
 
-# Create sources variable which contains all source files
+# Create base objects
 set(BASE_OBJECTS CSocket.cpp utils.cpp)
 
+# Executable for server
 add_executable(${TARGET_SERVER} ${BASE_OBJECTS} server.cpp)
-add_executable(${TARGET_CLIENT} ${BASE_OBJECTS} client.cpp)
 
 target_link_libraries(${TARGET_SERVER} 
     Threads::Threads
 )
+
+# Executable for client
+add_executable(${TARGET_CLIENT} ${BASE_OBJECTS} client.cpp)
 
 target_link_libraries(${TARGET_CLIENT} 
     Threads::Threads
